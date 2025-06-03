@@ -1,14 +1,16 @@
-# 📄 JSON Host Server
+# 📄 JSON & HTML Host Server
 
-A simple, lightweight server that allows you to host JSON files at custom routes with a clean web interface for management.
+A simple, lightweight server that allows you to host both JSON APIs and HTML pages at custom routes with a clean web interface for management.
 
 ## ✨ Features
 
-- 🌐 **Simple Web Interface** - Add and manage JSON routes through a clean UI
+- 🌐 **Simple Web Interface** - Add and manage both JSON and HTML routes through a clean UI
 - 🚀 **Instant JSON APIs** - Create JSON endpoints on the fly
+- 📄 **HTML Pages** - Host complete HTML pages with proper content types
 - 💾 **Persistent Storage** - Routes are saved to a local JSON file
 - 🎯 **Easy to Use** - No database required, just start and go
 - 🔄 **Real-time Updates** - Add/delete routes instantly
+- 🎨 **Content Type Support** - Automatic content-type headers (application/json for APIs, text/html for pages)
 
 ## 🚀 Quick Start
 
@@ -37,35 +39,51 @@ A simple, lightweight server that allows you to host JSON files at custom routes
 ### Through the Web Interface
 
 1. Visit `http://localhost:3000` in your browser
-2. Enter a route path (e.g., `/api/users`, `/config`, `/data/products`)
-3. Enter your JSON content in the textarea
-4. Click "Add Route"
-5. Your JSON is now available at `http://localhost:3000/your-route`
+2. Choose content type: **JSON (API Endpoint)** or **HTML (Web Page)**
+3. Enter a route path (e.g., `/api/users`, `/about`, `/landing-page`)
+4. Enter your content (JSON data or HTML code)
+5. Click "Add Route"
+6. Your content is now available at `http://localhost:3000/your-route`
+
+### Content Types
+
+**JSON Routes** (API Endpoints):
+- Perfect for creating REST API endpoints
+- Automatically served with `Content-Type: application/json`
+- JSON validation included
+
+**HTML Routes** (Web Pages):
+- Host complete web pages
+- Automatically served with `Content-Type: text/html`
+- Support for any HTML content
 
 ### Direct API Access
 
 Once you've added routes through the interface, you can access them directly:
 
 ```bash
-# If you added a route /api/users
+# JSON API endpoint
 curl http://localhost:3000/api/users
 
-# If you added a route /config
-curl http://localhost:3000/config
+# HTML page (returns HTML content)
+curl http://localhost:3000/about
+
+# View in browser
+open http://localhost:3000/your-html-page
 ```
 
 ## 🛠️ API Endpoints
 
-The server provides a few management endpoints:
+The server provides management endpoints:
 
 - `GET /api/routes` - List all configured routes
-- `POST /api/routes` - Add a new route
+- `POST /api/routes` - Add a new route (requires `route`, `content`, and `type`)
 - `DELETE /api/routes/:route` - Delete a route
 
 ## 📁 File Structure
 
 ```
-json-host-server/
+json-html-host-server/
 ├── server.js          # Main server file
 ├── package.json       # Dependencies and scripts
 ├── routes.json        # Auto-generated storage file
@@ -75,9 +93,12 @@ json-host-server/
 
 ## 🎯 Example Usage
 
-**Add a user list:**
+### JSON API Routes
+
+**User API:**
 - Route: `/api/users`
-- JSON: 
+- Type: `JSON`
+- Content: 
   ```json
   {
     "users": [
@@ -88,9 +109,10 @@ json-host-server/
   }
   ```
 
-**Add a configuration:**
-- Route: `/config`
-- JSON:
+**Configuration API:**
+- Route: `/api/config`
+- Type: `JSON`
+- Content:
   ```json
   {
     "app_name": "My App",
@@ -100,9 +122,39 @@ json-host-server/
   }
   ```
 
-Now you can access:
-- `http://localhost:3000/api/users` - Returns the user list
-- `http://localhost:3000/config` - Returns the configuration
+### HTML Page Routes
+
+**About Page:**
+- Route: `/about`
+- Type: `HTML`
+- Content:
+  ```html
+  <!DOCTYPE html>
+  <html>
+  <head>
+      <title>About Us</title>
+      <style>
+          body { font-family: Arial, sans-serif; margin: 40px; }
+          h1 { color: #333; }
+      </style>
+  </head>
+  <body>
+      <h1>About Our Company</h1>
+      <p>We are a innovative tech company focused on simplifying web development.</p>
+  </body>
+  </html>
+  ```
+
+**Landing Page:**
+- Route: `/landing`
+- Type: `HTML`
+- Content: Your complete landing page HTML
+
+### Access Your Content:
+- `http://localhost:3000/api/users` - Returns JSON data
+- `http://localhost:3000/api/config` - Returns JSON configuration
+- `http://localhost:3000/about` - Displays HTML about page
+- `http://localhost:3000/landing` - Shows your landing page
 
 ## 🔧 Configuration
 
@@ -116,18 +168,35 @@ PORT=8080 npm start
 
 All routes are automatically saved to `routes.json` in the project directory. This file is loaded when the server starts, so your routes persist between restarts.
 
+The storage format includes both content and type:
+```json
+{
+  "/api/users": {
+    "type": "json",
+    "content": {"users": [...], "total": 2}
+  },
+  "/about": {
+    "type": "html", 
+    "content": "<!DOCTYPE html>..."
+  }
+}
+```
+
 ## 🌟 Perfect For
 
-- 🔧 **Prototyping** - Quickly mock APIs for development
+- 🔧 **Prototyping** - Quickly mock APIs and pages for development
 - 📱 **Mobile App Development** - Provide JSON endpoints for testing
-- 🎭 **Frontend Development** - Mock backend responses
-- 📊 **Static Data Hosting** - Host configuration files or static datasets
+- 🎭 **Frontend Development** - Mock backend responses and host demo pages
+- 📊 **Static Content Hosting** - Host landing pages, documentation, or marketing pages
 - 🧪 **API Testing** - Create test endpoints for integration testing
+- 🎨 **Portfolio Sites** - Host simple HTML pages and portfolios
+- 📋 **Documentation** - Create simple documentation pages
 
 ## 🚀 Deployment
 
 This server can be easily deployed to any Node.js hosting platform:
 
+- Render.com (see DEPLOYMENT.md)
 - Heroku
 - Vercel
 - Railway
@@ -138,4 +207,4 @@ Just make sure to set the `PORT` environment variable if required by your hostin
 
 ---
 
-**That's it!** You now have a simple JSON hosting server running. Visit the web interface to start adding your JSON routes! 🎉 
+**That's it!** You now have a versatile content hosting server that can serve both JSON APIs and HTML pages. Visit the web interface to start adding your routes! 🎉 

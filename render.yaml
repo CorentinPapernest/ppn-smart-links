@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: json-host-server
+    name: json-html-host-server
     env: node
     plan: free
     buildCommand: npm install
@@ -11,5 +11,5 @@ services:
       - key: PORT
         fromService:
           type: web
-          name: json-host-server
+          name: json-html-host-server
           property: port 

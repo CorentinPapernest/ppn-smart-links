@@ -1,7 +1,7 @@
 {
-  "name": "json-host-server",
+  "name": "json-html-host-server",
   "version": "1.0.0",
-  "description": "Simple server to host JSON files at custom routes with a UI interface",
+  "description": "Simple server to host JSON APIs and HTML pages at custom routes with a UI interface",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

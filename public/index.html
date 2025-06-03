@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSON Host Server - Admin Panel</title>
+    <title>JSON & HTML Host Server - Admin Panel</title>
     <style>
         * {
             margin: 0;
@@ -51,7 +51,7 @@
             color: #555;
         }
 
-        input[type="text"] {
+        input[type="text"], select {
             width: 100%;
             padding: 12px 16px;
             border: 2px solid #e5e5e7;
@@ -60,9 +60,14 @@
             transition: border-color 0.2s;
         }
 
-        input[type="text"]:focus {
+        input[type="text"]:focus, select:focus {
             outline: none;
             border-color: #007aff;
+        }
+
+        select {
+            background: white;
+            cursor: pointer;
         }
 
         textarea {
@@ -80,6 +85,10 @@
         textarea:focus {
             outline: none;
             border-color: #007aff;
+        }
+
+        textarea.html-mode {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         button {
@@ -127,14 +136,34 @@
             flex: 1;
         }
 
+        .route-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
         .route-path {
             font-weight: 600;
             color: #007aff;
-            margin-bottom: 8px;
             font-size: 16px;
+            margin-right: 12px;
         }
 
-        .json-preview {
+        .route-type {
+            background: #007aff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .route-type.html {
+            background: #34c759;
+        }
+
+        .content-preview {
             background: #fff;
             padding: 12px;
             border-radius: 6px;
@@ -145,6 +174,11 @@
             max-height: 100px;
             overflow-y: auto;
             white-space: pre-wrap;
+        }
+
+        .content-preview.html {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            white-space: normal;
         }
 
         .route-actions {
@@ -177,7 +211,30 @@
             padding: 40px;
         }
 
-        .json-example {
+        .example-tabs {
+            display: flex;
+            margin-top: 8px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+        }
+
+        .example-tab {
+            flex: 1;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+
+        .example-tab.active {
+            background: #007aff;
+            color: white;
+        }
+
+        .example-content {
             background: #f8f9fa;
             border: 1px solid #e9ecef;
             border-radius: 6px;
@@ -186,28 +243,50 @@
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             font-size: 12px;
             color: #666;
+            display: none;
+        }
+
+        .example-content.active {
+            display: block;
+        }
+
+        .example-content.html {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📄 JSON Host Server</h1>
+        <h1>📄 JSON & HTML Host Server</h1>
         
         <div class="card">
-            <h2>Add New JSON Route</h2>
+            <h2>Add New Content Route</h2>
             <div id="statusMessage"></div>
             <form id="routeForm">
                 <div class="form-group">
                     <label for="route">Route Path:</label>
                     <input type="text" id="route" placeholder="/api/users" required>
-                    <small style="color: #666; font-size: 12px;">Example: /api/users, /config, /data/products</small>
+                    <small style="color: #666; font-size: 12px;">Example: /api/users, /config, /about, /landing-page</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="contentType">Content Type:</label>
+                    <select id="contentType" required>
+                        <option value="json">JSON (API Endpoint)</option>
+                        <option value="html">HTML (Web Page)</option>
+                    </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="json">JSON Content:</label>
-                    <textarea id="json" placeholder='{"message": "Hello World", "status": "success"}' required></textarea>
-                    <div class="json-example">
-Example JSON:
+                    <label for="content">Content:</label>
+                    <textarea id="content" placeholder='{"message": "Hello World", "status": "success"}' required></textarea>
+                    
+                    <div class="example-tabs">
+                        <button type="button" class="example-tab active" onclick="showExample('json')">JSON Example</button>
+                        <button type="button" class="example-tab" onclick="showExample('html')">HTML Example</button>
+                    </div>
+                    
+                    <div id="jsonExample" class="example-content active">
 {
   "users": [
     {"id": 1, "name": "John"},
@@ -215,6 +294,19 @@ Example JSON:
   ],
   "total": 2
 }
+                    </div>
+                    
+                    <div id="htmlExample" class="example-content html">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;My Page&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Welcome!&lt;/h1&gt;
+    &lt;p&gt;This is a custom HTML page.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
                     </div>
                 </div>
                 
@@ -234,36 +326,78 @@ Example JSON:
         // Load routes on page load
         document.addEventListener('DOMContentLoaded', loadRoutes);
 
+        // Content type change handler
+        document.getElementById('contentType').addEventListener('change', function() {
+            const contentTextarea = document.getElementById('content');
+            const type = this.value;
+            
+            if (type === 'json') {
+                contentTextarea.placeholder = '{"message": "Hello World", "status": "success"}';
+                contentTextarea.classList.remove('html-mode');
+                showExample('json');
+            } else {
+                contentTextarea.placeholder = '<!DOCTYPE html>\n<html>\n<head>\n    <title>My Page</title>\n</head>\n<body>\n    <h1>Welcome!</h1>\n    <p>This is a custom HTML page.</p>\n</body>\n</html>';
+                contentTextarea.classList.add('html-mode');
+                showExample('html');
+            }
+        });
+
+        // Example tab switcher
+        function showExample(type) {
+            // Update tabs
+            document.querySelectorAll('.example-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event?.target?.classList?.add('active') || document.querySelector(`[onclick="showExample('${type}')"]`).classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.example-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(type + 'Example').classList.add('active');
+        }
+
         // Form submission
         document.getElementById('routeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const route = document.getElementById('route').value.trim();
-            const jsonContent = document.getElementById('json').value.trim();
+            const content = document.getElementById('content').value.trim();
+            const type = document.getElementById('contentType').value;
             
             try {
-                // Validate JSON
-                JSON.parse(jsonContent);
+                // Validate content based on type
+                if (type === 'json') {
+                    JSON.parse(content);
+                }
                 
                 const response = await fetch('/api/routes', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ route, json: jsonContent })
+                    body: JSON.stringify({ route, content, type })
                 });
                 
                 const result = await response.json();
                 
                 if (response.ok) {
-                    showMessage('Route added successfully!', 'success');
+                    showMessage(`${type.toUpperCase()} route added successfully!`, 'success');
                     document.getElementById('routeForm').reset();
+                    // Reset to JSON mode
+                    document.getElementById('contentType').value = 'json';
+                    document.getElementById('content').classList.remove('html-mode');
+                    showExample('json');
                     loadRoutes();
                 } else {
                     showMessage(result.error || 'Error adding route', 'error');
                 }
             } catch (error) {
-                showMessage('Invalid JSON format', 'error');
+                if (type === 'json') {
+                    showMessage('Invalid JSON format', 'error');
+                } else {
+                    showMessage('Error processing content', 'error');
+                }
             }
         });
 
@@ -283,22 +417,55 @@ Example JSON:
         function renderRoutes() {
             const container = document.getElementById('routesList');
             
-            if (routes.length === 0) {
+            if (!routes || routes.length === 0) {
                 container.innerHTML = '<div class="empty-state">No routes configured yet. Add your first route above!</div>';
                 return;
             }
             
-            container.innerHTML = routes.map(({ route, json }) => `
-                <div class="route-item">
-                    <div class="route-info">
-                        <div class="route-path">${route}</div>
-                        <div class="json-preview">${JSON.stringify(json, null, 2)}</div>
+            container.innerHTML = routes.map((routeData) => {
+                // Handle both old and new data formats
+                let route, type, content;
+                
+                if (routeData.route && routeData.type && routeData.content !== undefined) {
+                    // New format
+                    route = routeData.route;
+                    type = routeData.type;
+                    content = routeData.content;
+                } else {
+                    // Handle potential old format or malformed data
+                    route = routeData.route || 'Unknown Route';
+                    type = routeData.type || 'json';
+                    content = routeData.content || routeData.json || 'No content';
+                }
+                
+                // Safe content preview generation
+                let previewContent;
+                try {
+                    if (type === 'json') {
+                        previewContent = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
+                    } else {
+                        const contentStr = String(content || '');
+                        previewContent = contentStr.length > 200 ? contentStr.substring(0, 200) + '...' : contentStr;
+                    }
+                } catch (error) {
+                    previewContent = 'Error displaying content';
+                }
+                
+                return `
+                    <div class="route-item">
+                        <div class="route-info">
+                            <div class="route-header">
+                                <div class="route-path">${route}</div>
+                                <div class="route-type ${type}">${type}</div>
+                            </div>
+                            <div class="content-preview ${type}">${previewContent}</div>
+                        </div>
+                        <div class="route-actions">
+                            <button class="delete" onclick="deleteRoute('${route}')">Delete</button>
+                        </div>
                     </div>
-                    <div class="route-actions">
-                        <button class="delete" onclick="deleteRoute('${route}')">Delete</button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // Delete a route
