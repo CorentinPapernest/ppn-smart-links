@@ -385,6 +385,7 @@
                 });
                 
                 const result = await response.json();
+                console.log('📡 Add route response:', result);
                 
                 if (response.ok) {
                     showMessage(`${type.toUpperCase()} route added successfully!`, 'success');
@@ -393,6 +394,8 @@
                     document.getElementById('contentType').value = 'json';
                     document.getElementById('content').classList.remove('html-mode');
                     showExample('json');
+                    
+                    console.log('🔄 Reloading routes after successful addition...');
                     loadRoutes();
                 } else {
                     showMessage(result.error || 'Error adding route', 'error');
@@ -408,26 +411,51 @@
 
         // Load all routes
         async function loadRoutes() {
+            console.log('🔄 Loading routes from API...');
             try {
                 const response = await fetch('/api/routes');
-                routes = await response.json();
+                console.log('📡 API response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('📊 Received routes data:', data);
+                console.log('📊 Number of routes:', data ? data.length : 'null/undefined');
+                
+                routes = data || [];
+                console.log('💾 Updated routes array:', routes);
+                
                 renderRoutes();
             } catch (error) {
-                console.error('Error loading routes:', error);
-                showMessage('Error loading routes', 'error');
+                console.error('❌ Error loading routes:', error);
+                showMessage('Error loading routes: ' + error.message, 'error');
+                
+                // Try to render with empty array as fallback
+                routes = [];
+                renderRoutes();
             }
         }
 
         // Render routes list
         function renderRoutes() {
+            console.log('🎨 Rendering routes...');
+            console.log('📋 Routes to render:', routes);
+            
             const container = document.getElementById('routesList');
             
             if (!routes || routes.length === 0) {
+                console.log('📝 No routes to display, showing empty state');
                 container.innerHTML = '<div class="empty-state">No routes configured yet. Add your first route above!</div>';
                 return;
             }
             
-            container.innerHTML = routes.map((routeData) => {
+            console.log(`🔢 Rendering ${routes.length} routes`);
+            
+            container.innerHTML = routes.map((routeData, index) => {
+                console.log(`📄 Processing route ${index + 1}:`, routeData);
+                
                 // Handle both old and new data formats
                 let route, type, content;
                 
@@ -438,6 +466,7 @@
                     content = routeData.content;
                 } else {
                     // Handle potential old format or malformed data
+                    console.warn('⚠️ Route data in unexpected format:', routeData);
                     route = routeData.route || 'Unknown Route';
                     type = routeData.type || 'json';
                     content = routeData.content || routeData.json || 'No content';
@@ -453,6 +482,7 @@
                         previewContent = contentStr.length > 200 ? contentStr.substring(0, 200) + '...' : contentStr;
                     }
                 } catch (error) {
+                    console.error('❌ Error generating preview for route:', route, error);
                     previewContent = 'Error displaying content';
                 }
                 
@@ -471,6 +501,8 @@
                     </div>
                 `;
             }).join('');
+            
+            console.log('✅ Routes rendered successfully');
         }
 
         // Delete a route

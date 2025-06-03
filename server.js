@@ -174,11 +174,19 @@ app.get('/', (req, res) => {
 // API endpoint to get all routes
 app.get('/api/routes', async (req, res) => {
   try {
+    console.log('📋 Fetching routes...');
+    
     if (useDatabase) {
+      console.log('🗄️ Using database storage');
       const routes = await getRoutesFromDatabase();
       if (routes !== null) {
+        console.log(`✅ Found ${routes.length} routes in database:`, routes.map(r => r.route));
         return res.json(routes);
+      } else {
+        console.log('❌ Database query failed, falling back to file storage');
       }
+    } else {
+      console.log('📁 Using file storage');
     }
     
     // Fallback to in-memory storage
@@ -187,9 +195,10 @@ app.get('/api/routes', async (req, res) => {
       type: contentRoutes[route].type,
       content: contentRoutes[route].content
     }));
+    console.log(`✅ Found ${routes.length} routes in file storage:`, routes.map(r => r.route));
     res.json(routes);
   } catch (error) {
-    console.error('Error fetching routes:', error.message);
+    console.error('❌ Error fetching routes:', error.message);
     res.status(500).json({ error: 'Failed to fetch routes' });
   }
 });
