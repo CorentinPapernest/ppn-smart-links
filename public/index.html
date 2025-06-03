@@ -446,21 +446,44 @@
             try {
                 const response = await fetch('/api/routes');
                 console.log('📡 API response status:', response.status);
+                console.log('📡 API response headers:', Object.fromEntries(response.headers.entries()));
                 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
-                const data = await response.json();
-                console.log('📊 Received routes data:', data);
+                const rawText = await response.text();
+                console.log('📄 Raw response text:', rawText.substring(0, 200) + '...');
+                
+                let data;
+                try {
+                    data = JSON.parse(rawText);
+                } catch (parseError) {
+                    console.error('❌ JSON parsing failed:', parseError);
+                    throw new Error('Invalid JSON response from server');
+                }
+                
+                console.log('📊 Parsed JSON data:', data);
+                console.log('📊 Data type:', typeof data);
+                console.log('📊 Is array:', Array.isArray(data));
                 console.log('📊 Number of routes:', data ? data.length : 'null/undefined');
                 
-                routes = data || [];
-                console.log('💾 Updated routes array:', routes);
+                if (Array.isArray(data)) {
+                    routes = data;
+                    console.log('💾 Successfully updated routes array with', routes.length, 'items');
+                    console.log('💾 First route example:', routes[0]);
+                } else {
+                    console.error('❌ Expected array but got:', typeof data);
+                    routes = [];
+                }
                 
+                console.log('🎨 About to call renderRoutes()');
                 renderRoutes();
+                console.log('✅ renderRoutes() completed');
+                
             } catch (error) {
-                console.error('❌ Error loading routes:', error);
+                console.error('❌ Error in loadRoutes():', error);
+                console.error('❌ Error stack:', error.stack);
                 showMessage('Error loading routes: ' + error.message, 'error');
                 
                 // Try to render with empty array as fallback
@@ -471,36 +494,51 @@
 
         // Render routes list
         function renderRoutes() {
-            console.log('🎨 Rendering routes...');
-            console.log('📋 Routes to render:', routes);
+            console.log('🎨 === RENDER ROUTES START ===');
+            console.log('🎨 Current routes variable:', routes);
+            console.log('🎨 Routes type:', typeof routes);
+            console.log('🎨 Routes is array:', Array.isArray(routes));
+            console.log('🎨 Routes length:', routes ? routes.length : 'N/A');
             
             const container = document.getElementById('routesList');
+            console.log('🎨 Container element:', container);
+            
+            if (!container) {
+                console.error('❌ Could not find routesList container element!');
+                return;
+            }
             
             if (!routes || routes.length === 0) {
                 console.log('📝 No routes to display, showing empty state');
-                container.innerHTML = '<div class="empty-state">No routes configured yet. Add your first route above!</div>';
+                const emptyHtml = '<div class="empty-state">No routes configured yet. Add your first route above!</div>';
+                console.log('📝 Setting empty state HTML:', emptyHtml);
+                container.innerHTML = emptyHtml;
+                console.log('📝 Empty state set, container innerHTML:', container.innerHTML);
                 return;
             }
             
             console.log(`🔢 Rendering ${routes.length} routes`);
             
-            container.innerHTML = routes.map((routeData, index) => {
+            const routeHtmlArray = [];
+            
+            routes.forEach((routeData, index) => {
                 console.log(`📄 Processing route ${index + 1}:`, routeData);
                 
                 // Handle both old and new data formats
                 let route, type, content;
                 
-                if (routeData.route && routeData.type && routeData.content !== undefined) {
+                if (routeData && routeData.route && routeData.type && routeData.content !== undefined) {
                     // New format
                     route = routeData.route;
                     type = routeData.type;
                     content = routeData.content;
+                    console.log(`✅ Route ${index + 1} parsed successfully:`, { route, type });
                 } else {
                     // Handle potential old format or malformed data
                     console.warn('⚠️ Route data in unexpected format:', routeData);
-                    route = routeData.route || 'Unknown Route';
-                    type = routeData.type || 'json';
-                    content = routeData.content || routeData.json || 'No content';
+                    route = routeData?.route || 'Unknown Route';
+                    type = routeData?.type || 'json';
+                    content = routeData?.content || routeData?.json || 'No content';
                 }
                 
                 // Safe content preview generation
@@ -517,7 +555,7 @@
                     previewContent = 'Error displaying content';
                 }
                 
-                return `
+                const routeHtml = `
                     <div class="route-item">
                         <div class="route-info">
                             <div class="route-header">
@@ -531,9 +569,19 @@
                         </div>
                     </div>
                 `;
-            }).join('');
+                
+                routeHtmlArray.push(routeHtml);
+                console.log(`📄 Route ${index + 1} HTML generated (${routeHtml.length} chars)`);
+            });
             
-            console.log('✅ Routes rendered successfully');
+            const finalHtml = routeHtmlArray.join('');
+            console.log('🔗 Combined HTML length:', finalHtml.length);
+            console.log('🔗 Combined HTML preview:', finalHtml.substring(0, 300) + '...');
+            
+            container.innerHTML = finalHtml;
+            console.log('✅ Container innerHTML updated');
+            console.log('🎨 Final container innerHTML length:', container.innerHTML.length);
+            console.log('🎨 === RENDER ROUTES END ===');
         }
 
         // Delete a route
@@ -543,7 +591,9 @@
             }
             
             try {
-                const response = await fetch(`/api/routes${route}`, {
+                // Fix URL construction - remove leading slash from route for the API path
+                const apiPath = route.startsWith('/') ? route.substring(1) : route;
+                const response = await fetch(`/api/routes/${apiPath}`, {
                     method: 'DELETE'
                 });
                 
