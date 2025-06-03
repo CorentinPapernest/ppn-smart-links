@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Host Server - Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #1d1d1f;
+            font-weight: 600;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e5e7;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #007aff;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e5e7;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            min-height: 200px;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #007aff;
+        }
+
+        button {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background: #0056cc;
+        }
+
+        button.delete {
+            background: #ff3b30;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        button.delete:hover {
+            background: #d70015;
+        }
+
+        .routes-list {
+            margin-top: 20px;
+        }
+
+        .route-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .route-info {
+            flex: 1;
+        }
+
+        .route-path {
+            font-weight: 600;
+            color: #007aff;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .json-preview {
+            background: #fff;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e5e5e7;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            color: #666;
+            max-height: 100px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .route-actions {
+            margin-left: 16px;
+        }
+
+        .status-message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+        }
+
+        .json-example {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📄 JSON Host Server</h1>
+        
+        <div class="card">
+            <h2>Add New JSON Route</h2>
+            <div id="statusMessage"></div>
+            <form id="routeForm">
+                <div class="form-group">
+                    <label for="route">Route Path:</label>
+                    <input type="text" id="route" placeholder="/api/users" required>
+                    <small style="color: #666; font-size: 12px;">Example: /api/users, /config, /data/products</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="json">JSON Content:</label>
+                    <textarea id="json" placeholder='{"message": "Hello World", "status": "success"}' required></textarea>
+                    <div class="json-example">
+Example JSON:
+{
+  "users": [
+    {"id": 1, "name": "John"},
+    {"id": 2, "name": "Jane"}
+  ],
+  "total": 2
+}
+                    </div>
+                </div>
+                
+                <button type="submit">Add Route</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Active Routes</h2>
+            <div id="routesList"></div>
+        </div>
+    </div>
+
+    <script>
+        let routes = [];
+
+        // Load routes on page load
+        document.addEventListener('DOMContentLoaded', loadRoutes);
+
+        // Form submission
+        document.getElementById('routeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const route = document.getElementById('route').value.trim();
+            const jsonContent = document.getElementById('json').value.trim();
+            
+            try {
+                // Validate JSON
+                JSON.parse(jsonContent);
+                
+                const response = await fetch('/api/routes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ route, json: jsonContent })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showMessage('Route added successfully!', 'success');
+                    document.getElementById('routeForm').reset();
+                    loadRoutes();
+                } else {
+                    showMessage(result.error || 'Error adding route', 'error');
+                }
+            } catch (error) {
+                showMessage('Invalid JSON format', 'error');
+            }
+        });
+
+        // Load all routes
+        async function loadRoutes() {
+            try {
+                const response = await fetch('/api/routes');
+                routes = await response.json();
+                renderRoutes();
+            } catch (error) {
+                console.error('Error loading routes:', error);
+                showMessage('Error loading routes', 'error');
+            }
+        }
+
+        // Render routes list
+        function renderRoutes() {
+            const container = document.getElementById('routesList');
+            
+            if (routes.length === 0) {
+                container.innerHTML = '<div class="empty-state">No routes configured yet. Add your first route above!</div>';
+                return;
+            }
+            
+            container.innerHTML = routes.map(({ route, json }) => `
+                <div class="route-item">
+                    <div class="route-info">
+                        <div class="route-path">${route}</div>
+                        <div class="json-preview">${JSON.stringify(json, null, 2)}</div>
+                    </div>
+                    <div class="route-actions">
+                        <button class="delete" onclick="deleteRoute('${route}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Delete a route
+        async function deleteRoute(route) {
+            if (!confirm(`Are you sure you want to delete the route: ${route}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/routes${route}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showMessage('Route deleted successfully!', 'success');
+                    loadRoutes();
+                } else {
+                    showMessage(result.error || 'Error deleting route', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting route:', error);
+                showMessage('Error deleting route', 'error');
+            }
+        }
+
+        // Show status message
+        function showMessage(message, type) {
+            const container = document.getElementById('statusMessage');
+            container.innerHTML = `<div class="status-message ${type}">${message}</div>`;
+            
+            // Clear message after 5 seconds
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html> 
