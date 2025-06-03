@@ -124,22 +124,30 @@
 
         .routes-list {
             margin-top: 20px;
-            display: block;
-            overflow: hidden;
-            min-height: 50px;
+            /* Aggressive CSS fixes to force visibility */
+            display: block !important;
+            overflow: visible !important;
+            min-height: 100px !important;
+            background: #fff !important;
+            border: 2px solid #007aff !important;
+            padding: 20px !important;
+            position: relative !important;
+            z-index: 1000 !important;
         }
 
         .route-item {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
+            background: #f8f9fa !important;
+            border: 1px solid #e9ecef !important;
             border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-            display: flex;
+            padding: 16px !important;
+            margin-bottom: 12px !important;
+            display: flex !important;
             justify-content: space-between;
             align-items: flex-start;
-            box-sizing: border-box;
-            width: 100%;
+            box-sizing: border-box !important;
+            width: 100% !important;
+            min-height: 80px !important;
+            position: relative !important;
         }
 
         .route-info {
@@ -586,6 +594,56 @@
             container.innerHTML = finalHtml;
             console.log('✅ Container innerHTML updated');
             console.log('🎨 Final container innerHTML length:', container.innerHTML.length);
+            
+            // Real-time DOM debugging
+            setTimeout(() => {
+                console.log('🕐 DOM Check after 100ms:');
+                console.log('🎨 Container innerHTML after timeout:', container.innerHTML.length, 'chars');
+                console.log('🎨 Container visible height:', container.offsetHeight);
+                console.log('🎨 Container children count:', container.children.length);
+                
+                const containerStyles = window.getComputedStyle(container);
+                console.log('🎨 Container computed styles:', {
+                    display: containerStyles.display,
+                    height: containerStyles.height,
+                    minHeight: containerStyles.minHeight,
+                    overflow: containerStyles.overflow,
+                    visibility: containerStyles.visibility,
+                    position: containerStyles.position,
+                    zIndex: containerStyles.zIndex
+                });
+                
+                if (container.children.length > 0) {
+                    const firstChild = container.children[0];
+                    const childStyles = window.getComputedStyle(firstChild);
+                    console.log('🎨 First child styles:', {
+                        display: childStyles.display,
+                        height: childStyles.height,
+                        minHeight: childStyles.minHeight,
+                        visibility: childStyles.visibility
+                    });
+                    console.log('🎨 First child innerHTML preview:', firstChild.innerHTML.substring(0, 100));
+                } else {
+                    console.error('❌ No children found in container after 100ms!');
+                }
+            }, 100);
+            
+            // Force container to be visible with direct style manipulation
+            container.style.cssText = `
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                height: auto !important;
+                min-height: 100px !important;
+                background: yellow !important;
+                border: 3px solid red !important;
+                padding: 20px !important;
+                margin: 20px 0 !important;
+                position: relative !important;
+                z-index: 9999 !important;
+                overflow: visible !important;
+            `;
+            console.log('🎨 Applied aggressive inline styles to force visibility');
             
             console.log('🎨 === RENDER ROUTES END ===');
         }
