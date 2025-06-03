@@ -328,8 +328,39 @@
     <script>
         let routes = [];
 
+        // Global error handler
+        window.addEventListener('error', function(e) {
+            console.error('🚨 JavaScript Error:', e.error);
+            showMessage('JavaScript Error: ' + e.message, 'error');
+        });
+
+        // Test API connectivity
+        async function testApiConnectivity() {
+            try {
+                console.log('🔍 Testing API connectivity...');
+                const response = await fetch('/api/health');
+                const health = await response.json();
+                console.log('✅ API Health Check:', health);
+                return true;
+            } catch (error) {
+                console.error('❌ API connectivity test failed:', error);
+                showMessage('API connectivity issue: ' + error.message, 'error');
+                return false;
+            }
+        }
+
         // Load routes on page load
-        document.addEventListener('DOMContentLoaded', loadRoutes);
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('📱 Page loaded, starting initialization...');
+            
+            // Test API first
+            const apiWorking = await testApiConnectivity();
+            if (apiWorking) {
+                loadRoutes();
+            } else {
+                console.error('🚫 Skipping route loading due to API connectivity issues');
+            }
+        });
 
         // Content type change handler
         document.getElementById('contentType').addEventListener('change', function() {

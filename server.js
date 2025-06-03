@@ -125,11 +125,26 @@ async function getRoutesFromDatabase() {
   
   try {
     const result = await pool.query('SELECT route, type, content FROM routes ORDER BY route');
-    return result.rows.map(row => ({
-      route: row.route,
-      type: row.type,
-      content: JSON.parse(row.content)
-    }));
+    console.log('🔍 Raw database result:', result.rows);
+    
+    const routes = result.rows.map(row => {
+      let parsedContent;
+      try {
+        parsedContent = typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
+      } catch (parseError) {
+        console.warn('⚠️ Could not parse content for route:', row.route, parseError.message);
+        parsedContent = row.content; // Use raw content if parsing fails
+      }
+      
+      return {
+        route: row.route,
+        type: row.type,
+        content: parsedContent
+      };
+    });
+    
+    console.log('✅ Formatted routes for API:', routes);
+    return routes;
   } catch (error) {
     console.error('Database fetch error:', error.message);
     return null;
@@ -169,6 +184,15 @@ async function getRouteFromDatabase(route) {
 // Serve the main UI
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    storage: useDatabase ? 'database' : 'file',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // API endpoint to get all routes
@@ -288,6 +312,15 @@ app.get('*', async (req, res) => {
     if (useDatabase) {
       const routeData = await getRouteFromDatabase(route);
       if (routeData) {
+        // Set appropriate headers for well-known files
+        if (route.includes('apple-app-site-association') || route.includes('assetlinks.json')) {
+          res.setHeader('Content-Type', 'application/json');
+          // For testing: disable cache (remove in production)
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', '0');
+        }
+        
         if (routeData.type === 'json') {
           return res.json(routeData.content);
         } else if (routeData.type === 'html') {
@@ -300,6 +333,15 @@ app.get('*', async (req, res) => {
     // Fallback to in-memory storage
     if (contentRoutes[route]) {
       const routeData = contentRoutes[route];
+      
+      // Set appropriate headers for well-known files
+      if (route.includes('apple-app-site-association') || route.includes('assetlinks.json')) {
+        res.setHeader('Content-Type', 'application/json');
+        // For testing: disable cache (remove in production)
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      }
       
       if (routeData.type === 'json') {
         res.json(routeData.content);
