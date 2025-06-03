@@ -124,6 +124,9 @@
 
         .routes-list {
             margin-top: 20px;
+            display: block;
+            overflow: hidden;
+            min-height: 50px;
         }
 
         .route-item {
@@ -135,6 +138,8 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            box-sizing: border-box;
+            width: 100%;
         }
 
         .route-info {
@@ -508,17 +513,6 @@
                 return;
             }
             
-            // CSS debugging
-            const containerStyles = window.getComputedStyle(container);
-            console.log('🎨 Container computed styles:', {
-                display: containerStyles.display,
-                visibility: containerStyles.visibility,
-                opacity: containerStyles.opacity,
-                height: containerStyles.height,
-                overflow: containerStyles.overflow,
-                position: containerStyles.position
-            });
-            
             if (!routes || routes.length === 0) {
                 console.log('📝 No routes to display, showing empty state');
                 const emptyHtml = '<div class="empty-state">No routes configured yet. Add your first route above!</div>';
@@ -592,26 +586,6 @@
             container.innerHTML = finalHtml;
             console.log('✅ Container innerHTML updated');
             console.log('🎨 Final container innerHTML length:', container.innerHTML.length);
-            
-            // Add CSS debugging border to make container visible
-            container.style.border = '3px solid red';
-            container.style.minHeight = '100px';
-            container.style.backgroundColor = 'yellow';
-            console.log('🎨 Added debugging styles to container');
-            
-            // Check if first route item is visible
-            const firstRouteItem = container.querySelector('.route-item');
-            if (firstRouteItem) {
-                const itemStyles = window.getComputedStyle(firstRouteItem);
-                console.log('🎨 First route item styles:', {
-                    display: itemStyles.display,
-                    visibility: itemStyles.visibility,
-                    opacity: itemStyles.opacity,
-                    height: itemStyles.height
-                });
-                firstRouteItem.style.border = '2px solid blue';
-                console.log('🎨 Added debugging border to first route item');
-            }
             
             console.log('🎨 === RENDER ROUTES END ===');
         }
